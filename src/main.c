@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>  // getopt
 #include <string.h>  // strtok
-#include <wchar.h>   //wprintf
+// #include <wchar.h>   //wprintf
 #include "defs.h"
 #include "getutf8.h"
 #include "utf8Util.h"
@@ -13,28 +13,29 @@ int main( int argc, char **argv )
     bool showD = false;
     bool showR = false;
     bool showB = false;
-    char *Dvalue = NULL;
-    char *Rvalue = NULL;
-    char *Bvalue = NULL;
-    int c;
-    
+    bool showBOM = false;
+    char *argValue = NULL;
+    int c; // getopt iterator
 
     opterr = 0; // mandatory, other apps can interfere with getopt
-    while ((c = getopt (argc, argv, "d:r:b:")) != -1)
+    while ((c = getopt (argc, argv, "d:r:b:h")) != -1)
     {
         switch (c)
         {
         case 'd':
             showD = true;
-            Dvalue = optarg;
+            argValue = optarg;
             break;
         case 'r':
             showR = true;
-            Rvalue = optarg;
+            argValue = optarg;
             break;
         case 'b':
             showB = true;
-            Bvalue = optarg;
+            argValue = optarg;
+            break;
+        case 'h':
+            showBOM = true;
             break;
         case '?':
             if (optopt == 'd')
@@ -53,16 +54,27 @@ int main( int argc, char **argv )
     
     if (showD)
     {
-        int d = atoi(Dvalue);
-        printf("Showing single value: %d\n", d);
-        printf("%s\n", ShowChar(d));
+        unsigned long d = (unsigned long)atoll(argValue); // Dvalue);
+        printf("Showing single value: %lu\n", d);
+        ShowChar(d);
+        printf("\n");
+    }
+    else if (showB)
+    {
+        // unsigned long dec = (unsigned long) atoll(Bvalue);
+        unsigned long dec = (unsigned long) atoll(argValue);
+        char *str;
+        dec = DecToUtf8( dec );
+        str = Dec2Str( dec );
+        printf("%s\n", str);
+        free(str);
     }
     else if (showR)
     {
-        int start, end;
+        unsigned long start, end;
         char *s = calloc(10, sizeof(char*));
         char *e = calloc(10, sizeof(char*));
-        int len = strlen( Rvalue );
+        int len = strlen(argValue); // Rvalue );
         bool found = false;
         int j = 0;
 
@@ -70,43 +82,48 @@ int main( int argc, char **argv )
         {
             if (!found)
             {
-                if (Rvalue[i] == '.')
+                // if (Rvalue[i] == '.')
+                if (argValue[i] == '.')
                 {
                     s[i] = '\0';
                     found = true;
                     i += 1;
                 }
                 else
-                    s[i] = Rvalue[i];
+                    s[i] = argValue[i];
+                    // s[i] = Rvalue[i];
             }
             else
             {
-               e[j] = Rvalue[i];
+               // e[j] = Rvalue[i];
+               e[j] = argValue[i];
                j += 1;
                if (i == (len -1))
                   e[j] = '\0';
             }
         }
 
-        start = atoi(s);
-        end = atoi(e);
-        printf("Showing Range: %d to %d for %s\n", start, end, Rvalue);
-        wprintf(L"%s\n", ShowRange(start, end));
-        free(s); free(e);
+        start = (unsigned long)atoll(s); free(s); 
+        end   = (unsigned long)atoll(e); free(e);
+        printf("Showing character Range: %lu to %lu\n", start, end);
+        ShowRange(start, end);
     }
-    else if (showB)
+    else if (showBOM)
     {
-        //printf ("Bvalue = ld\n",  atol(Bvalue) );
-        unsigned long dec = (unsigned long)atol(Bvalue);
-        char *bin = DecimalToBinary( dec );
-        printf ("%lu = %s\n", dec, bin);
+        // showing decimal: 15711167 doesn't cut it.  It prepends a byte
+        // of zeros.  Instead print 0xEF,0xBB,0xBF and exit.
+        printf("\xEF\xBB\xBF");
     }
     else
     {   
-
 	    printf( "%s\n", Usage() );
     }
     return 0;
+} // main
+
+void ProcessArguments( int argc, char **argv )
+{
+
 }
 
 char *Usage()
@@ -115,7 +132,27 @@ char *Usage()
 "Usage:\n\
 \tgetutf8 [options]\n\
 Where [options] are:\n\
-\t-d # - return just the character represented by the decimal value #\n\
-\t-r #..# - show the characters represented by the decimal range #..#\n\
-\t          in the format of d[tab]char\n";
+\t-d #    - return just the character represented by the\n\
+\t          decimal value.\n\
+\t-b #    - return just the character represented by the \n\
+\t          utf-8 interpreted value.\n\
+\t-r #..# - show the utf-8 characters represented by the decimal \n\
+\t          range #..# in tab delimited format.\n\
+\t-h      - print out the utf-8 byte order mark: \\xEF\\xBB\\xBF";
 }
+
+/*
+Example: 
+   Smily UTF-8 Face
+
+$ ./getutf8 -r 128513..128513
+Showing character Range: 128513 to 128513
+dec     hex     char    utf-8 dec       utf-8 hex       utf-8 char      utf-8 binary
+128513  #1f601  �       4036991105      #f09f9881       😁       11110000100111111001100010000001
+$
+
+or
+$ ./getutf8 -b 128513
+😁
+$
+*/

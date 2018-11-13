@@ -1,43 +1,46 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <wchar.h>
+#include <string.h>  // strlen()
+#include <stdio.h>   // printf()
+#include <stdlib.h>  // mem free()
+#include "defs.h"    // right()
+#include "utf8Util.h" 
 
-char* ShowRange(long start, long end)
+void ShowRange(unsigned long start, unsigned long end)
 {
-    char *tmpc = calloc(3, sizeof(char*));
-    char *tmpd = calloc(8, sizeof(char*)); // number smaller than 7 chars... right?
-    char *tmpx = calloc(5, sizeof(char*)); // hex is 5 chars: "\x##\0"
-    // char *line =  calloc(30, sizeof(char*));
-    // char *buf = calloc(sizeof(line) * (end-start), sizeof(char*)); 
-    char *buf = calloc(20 * (end-start), sizeof(char*)); 
-    for (int i = start; i <= end; i++)
+    unsigned long utf8Dec = 0;
+    // Format:
+    //  "{dec}\t{hex}\t{dec char}\t{utf-8 dec}\t{utf-8 hex}\t{utf-8 char}\t{bin}\n"
+    printf("dec\thex\tchar\tutf-8 dec\tutf-8 hex\tutf-8 char\tutf-8 binary\n");
+
+    for (unsigned long dec = start; dec <= end; dec++)
     {
-        unsigned long ul = (unsigned long)(i+4036862976);
-        sprintf(tmpc, "%luc-", ul); // CHAR: already has '\0' at end
-        sprintf(tmpd, "%lud-", ul);
-        sprintf(tmpx, "%lux-", ul); // 65 dec is \x41
-        strcat(buf, tmpc);
-        strcat(buf, tmpd);
-        strcat(buf, tmpx);
-        sprintf(tmpx, "%lux\n", ul); // 65 dec is \x41
-        strcat(buf, tmpx);
+        char *decStr, *utf8Str, *utf8Bin;
+        decStr = Dec2Str( dec );
+        utf8Dec = DecToUtf8( dec );
+        utf8Str = Dec2Str( utf8Dec );
+        utf8Bin = DecToBinary( utf8Dec );
+        // "{dec}\t{hex}\t{dec char}\t{utf-8 dec}\t{utf-8 hex}\t{utf-8 char}\t{bin}\n"
+        printf("%lu\t#%lx\t%s\t%lu\t#%lx\t%s\t%s\n",
+                dec,
+                dec,
+                decStr,
+                utf8Dec,
+                utf8Dec,
+                utf8Str,
+                right(utf8Bin,32));
+        free(decStr);
+        free(utf8Str);
+        free(utf8Bin);
     }
-    return buf;
 }
 
 /// <summary>
+/// Displays character based on decimal value to stdout.
 /// https://www.fileformat.info/info/unicode/utf8.htm
 /// http://www.ietf.org/rfc/rfc3629.txt
 /// </summary>
-void DecToUtf8(unsigned long dec)
+void ShowChar(int dec)
 {
-
-}
-
-char* ShowChar(int dec)
-{
-    char *buf = calloc(2, sizeof(char*)); 
-    sprintf(buf, "%c", dec);
-    return buf;
+    char *str = Dec2Str(dec);
+    printf("%s", str);
+    free( str );
 }
