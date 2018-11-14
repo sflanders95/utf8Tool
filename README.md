@@ -56,7 +56,7 @@ gcc  -o utf8Tool src/main.o src/getutf8.o \
 $
 ```
 
-<img width="500px" height="1px"/>[/sflanders95/utf8Tool]
+<img width="80%" height="1px"/>[/sflanders95/utf8Tool]
 
 
 [/sflanders95/utf8Tool]: https://github.com/sflanders95/utf8Tool
