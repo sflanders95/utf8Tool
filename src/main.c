@@ -1,22 +1,27 @@
-#include <ctype.h>
+#include <ctype.h> // isprint
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>  // getopt
 #include <string.h>  // strtok
 // #include <wchar.h>   //wprintf
-#include "defs.h"
+//#include "defs.h"
 #include "getutf8.h"
 #include "utf8Util.h"
+#include "StreamHandler.h"
+#include "ArgParser.h"
 
 int main( int argc, char **argv )
 {
+
+    struct OptionArgs op = ParseArguments( argc,  argv );
+
+#if 0 // to be deleted section.
     bool showD = false;
     bool showR = false;
     bool showB = false;
     bool showBOM = false;
     char *argValue = NULL;
     int c; // getopt iterator
-
     opterr = 0; // mandatory, other apps can interfere with getopt
     while ((c = getopt (argc, argv, "d:r:b:h")) != -1)
     {
@@ -51,26 +56,26 @@ int main( int argc, char **argv )
             abort ();
         }
     }
-    
-    if (showD)
+#endif
+
+    if (op.ShowDecimal)
     {
-        unsigned long d = (unsigned long)atoll(argValue); // Dvalue);
-        printf("Showing single value: %lu\n", d);
-        ShowChar(d);
+        #if _SHOWDEBUG
+            printf("Showing single value: %lu\n", op.DecimalValue);
+        #endif
+        ShowChar(op.DecimalValue);
         printf("\n");
     }
-    else if (showB)
+    else if (op.ShowUtf8)
     {
-        // unsigned long dec = (unsigned long) atoll(Bvalue);
-        unsigned long dec = (unsigned long) atoll(argValue);
-        char *str;
-        dec = DecToUtf8( dec );
-        str = Dec2Str( dec );
-        printf("%s\n", str);
-        free(str);
+        ShowChar(op.Utf8Value);
+        printf("\n");
     }
-    else if (showR)
+    else if (op.ShowRange)
     {
+        printf("Showing character Range: %lu to %lu\n", op.RangeStart, op.RangeEnd);
+        ShowRange(op.RangeStart, op.RangeEnd);
+        #if 0 // section to be deleted
         unsigned long start, end;
         char *s = calloc(10, sizeof(char*));
         char *e = calloc(10, sizeof(char*));
@@ -105,13 +110,12 @@ int main( int argc, char **argv )
 
         start = (unsigned long)atoll(s); free(s); 
         end   = (unsigned long)atoll(e); free(e);
-        printf("Showing character Range: %lu to %lu\n", start, end);
-        ShowRange(start, end);
+        #endif
     }
-    else if (showBOM)
+    else if (op.ShowHeader)
     {
-        // showing decimal: 15711167 doesn't cut it.  It prepends a byte
-        // of zeros.  Instead print 0xEF,0xBB,0xBF and exit.
+        // showing decimal: 15711167 (EFBBBF) doesn't cut it.  It prepends
+        // a byte of zeros.  Instead print 0xEF,0xBB,0xBF and exit.
         printf("\xEF\xBB\xBF");
     }
     else
@@ -121,10 +125,6 @@ int main( int argc, char **argv )
     return 0;
 } // main
 
-void ProcessArguments( int argc, char **argv )
-{
-
-}
 
 char *Usage()
 {
@@ -137,7 +137,8 @@ Where [options] are:\n\
 \t-b #    - return just the character represented by the \n\
 \t          utf-8 interpreted value.\n\
 \t-r #..# - show the utf-8 characters represented by the decimal \n\
-\t          range #..# in tab delimited format.\n\
+\t          range #..# in tab delimited format. output contains\n\
+\t          elements of both -d and -b.\n\
 \t-h      - print out the utf-8 byte order mark: \\xEF\\xBB\\xBF";
 }
 
@@ -145,14 +146,14 @@ Where [options] are:\n\
 Example: 
    Smily UTF-8 Face
 
-$ ./getutf8 -r 128513..128513
+$ ./utf8Tool -r 128513..128513
 Showing character Range: 128513 to 128513
 dec     hex     char    utf-8 dec       utf-8 hex       utf-8 char      utf-8 binary
 128513  #1f601  �       4036991105      #f09f9881       😁       11110000100111111001100010000001
 $
 
 or
-$ ./getutf8 -b 128513
+$ ./utf8Tool -b 128513
 😁
 $
 */
