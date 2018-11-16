@@ -1,12 +1,15 @@
 #include <unistd.h>
 #include <stdio.h>
+#include "StreamHandler.h"
+#include "utf8Util.h"
+#include "getutf8.h"
  
-int TestForPipe(void)
+bool TestForPipe(void)
 {
     if (isatty (STDIN_FILENO))
-        return 0; // not a pipe input.
+        return false; // not a pipe input.
     else
-        return 1; // is a pipe input
+        return true; // is a pipe input
 } // TestForPipe
 
 void ProcessStream(void)
@@ -23,7 +26,9 @@ void ProcessStream(void)
             printf("\n");
             KeepReading = 0;
         } else {
-            printf("%c", c);
+            // unsigned long cul = DecToUtf8((unsigned long)c);
+            ShowChar(DecToUtf8((unsigned long)c));
+            //printf("%c", c);
         }
     } //while
 }

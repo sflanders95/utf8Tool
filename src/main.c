@@ -15,50 +15,20 @@ int main( int argc, char **argv )
 
     struct OptionArgs op = ParseArguments( argc,  argv );
 
-#if 0 // to be deleted section.
-    bool showD = false;
-    bool showR = false;
-    bool showB = false;
-    bool showBOM = false;
-    char *argValue = NULL;
-    int c; // getopt iterator
-    opterr = 0; // mandatory, other apps can interfere with getopt
-    while ((c = getopt (argc, argv, "d:r:b:h")) != -1)
+    // This can occur with other cli options
+    if (op.ShowHeader)
     {
-        switch (c)
-        {
-        case 'd':
-            showD = true;
-            argValue = optarg;
-            break;
-        case 'r':
-            showR = true;
-            argValue = optarg;
-            break;
-        case 'b':
-            showB = true;
-            argValue = optarg;
-            break;
-        case 'h':
-            showBOM = true;
-            break;
-        case '?':
-            if (optopt == 'd')
-            fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-            else if (isprint (optopt))
-            fprintf (stderr, "Unknown option `-%c'.\n", optopt);
-            else
-            fprintf (stderr,
-                    "Unknown option character `\\x%x'.\n",
-                    optopt);
-            return 1;
-        default:
-            abort ();
-        }
+        // print 0xEF,0xBB,0xBF - decimal: 15711167 (EFBBBF).  
+        printf("\xEF\xBB\xBF");
     }
-#endif
 
-    if (op.ShowDecimal)
+    // rest of options are mutually exclusive.
+    if (TestForPipe())
+    {
+        // pipe data as input.
+        ProcessStream();
+    }
+    else if (op.ShowDecimal)
     {
         #if _SHOWDEBUG
             printf("Showing single value: %lu\n", op.DecimalValue);
@@ -75,48 +45,6 @@ int main( int argc, char **argv )
     {
         printf("Showing character Range: %lu to %lu\n", op.RangeStart, op.RangeEnd);
         ShowRange(op.RangeStart, op.RangeEnd);
-        #if 0 // section to be deleted
-        unsigned long start, end;
-        char *s = calloc(10, sizeof(char*));
-        char *e = calloc(10, sizeof(char*));
-        int len = strlen(argValue); // Rvalue );
-        bool found = false;
-        int j = 0;
-
-        for (int i = 0; i < len; i++)
-        {
-            if (!found)
-            {
-                // if (Rvalue[i] == '.')
-                if (argValue[i] == '.')
-                {
-                    s[i] = '\0';
-                    found = true;
-                    i += 1;
-                }
-                else
-                    s[i] = argValue[i];
-                    // s[i] = Rvalue[i];
-            }
-            else
-            {
-               // e[j] = Rvalue[i];
-               e[j] = argValue[i];
-               j += 1;
-               if (i == (len -1))
-                  e[j] = '\0';
-            }
-        }
-
-        start = (unsigned long)atoll(s); free(s); 
-        end   = (unsigned long)atoll(e); free(e);
-        #endif
-    }
-    else if (op.ShowHeader)
-    {
-        // showing decimal: 15711167 (EFBBBF) doesn't cut it.  It prepends
-        // a byte of zeros.  Instead print 0xEF,0xBB,0xBF and exit.
-        printf("\xEF\xBB\xBF");
     }
     else
     {   
