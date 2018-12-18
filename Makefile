@@ -3,6 +3,9 @@ CFLAGS=
 
 all : utf8Tool
 
+debug : CFLAGS += -g
+debug : utf8Tool
+
 utf8Tool : src/main.o src/getutf8.o src/utf8Util.o \
            src/ArgParser.o src/StreamHandler.o
 	$(CC) $(CFLAGS) -o utf8Tool src/main.o src/getutf8.o \
