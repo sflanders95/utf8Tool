@@ -29,7 +29,11 @@ Where [options] are:
 ```
 
 # Building
+
+Note: this runs fine under WSL, but does not run on my Debian Raspberry Pi
+
 Sample Session:
+
 ``` block
 $ make -ver
 GNU Make 3.81
