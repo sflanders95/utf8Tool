@@ -62,5 +62,8 @@ $
 
 <img width="80%" height="1px"/>[/sflanders95/utf8Tool]
 
+### Note
+
+I've tried building this on my Debian Raspberry Pi, and it builds just fine. However, it does not run.  It only runs on my WSL (ubuntu) on WinX. Any help making it better cross platform would be greatly appreciated. (keeping it in C of course for this proj)
 
 [/sflanders95/utf8Tool]: https://github.com/sflanders95/utf8Tool
